@@ -202,13 +202,26 @@ static NSInteger _index = -1;
 }
 
 #pragma mark 时间格式转换
-- (NSString *)formatTime:(NSTimeInterval)duration {
+- (NSString *)cl_formatTime:(NSTimeInterval)duration {
     if (duration == 0) {
         return @"00:00";
     }
     NSInteger minute = (int)duration / 60;
     NSInteger second = (int)duration % 60;
     return [NSString stringWithFormat:@"%.02ld:%.02ld", (long)minute, (long)second];
+}
+
+#pragma mark 为数组随机排序
+- (NSArray *)cl_randomArray:(NSArray *)array {
+    NSArray *randomArray = [array sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
+        int seed = arc4random_uniform(2);   // 生成0～(2-1)的随机数
+        if (seed) {
+            return NSOrderedAscending;
+        } else {
+            return NSOrderedDescending;
+        }
+    }];
+    return randomArray;
 }
 
 #pragma mark - PlayerItem监听

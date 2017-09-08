@@ -92,15 +92,6 @@ typedef NS_ENUM(NSInteger, CLMusicStatus) {
  */
 - (void)cl_musicPlayOrPause;
 
-//
-///**
-// 跳转音乐进度
-//
-// @param progress 进度百分比
-// @param block 跳转完成
-// */
-
-
 /**
  跳转音乐进度 —— 开始
  */
@@ -135,12 +126,22 @@ typedef NS_ENUM(NSInteger, CLMusicStatus) {
  */
 - (void)cl_updateLockScreen;
 
+#pragma mark -
+#pragma mark 其他辅助方法
 /**
  时间格式转换
  
  @param duration 时间秒数
  @return 时间字符串 如 00:00
  */
-- (NSString *)formatTime:(NSTimeInterval)duration;
+- (NSString *)cl_formatTime:(NSTimeInterval)duration;
+
+/**
+ 为数组随机排序
+
+ @param array 源数组
+ @return 随机数组
+ */
+- (NSArray *)cl_randomArray:(NSArray *)array;
 
 @end

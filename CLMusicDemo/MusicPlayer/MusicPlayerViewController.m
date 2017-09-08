@@ -142,6 +142,9 @@ static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
     if (scrollView == self.tableView) {
         isLyricScroll = NO;
+        NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.musicPlayer.currectLyricIndex inSection:0];
+        [self.tableView reloadData];
+        [self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
     }
 }
 
