@@ -12,9 +12,14 @@
 
 //返回一个 Dict，将 Model 属性名对映射到 JSON 的 Key。
 + (NSDictionary *)modelCustomPropertyMapper {
-    return @{@"singerName" : @"xsinger_name",
-             @"songName" : @"xsong_name",
+    return @{
+             @"songId" : @"song_id",
+             @"singerName" : @"author",
+             @"songName" : @"title",
              @"songLink" : @"xsong_url",
+             @"album" : @"album_title",
+             @"thumb" : @"pic_small",
+             
              };
 }
 

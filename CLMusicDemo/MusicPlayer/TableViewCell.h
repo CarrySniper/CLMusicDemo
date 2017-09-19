@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "CLMusicModel.h"
+#import <UIKit+AFNetworking.h>
 
 @interface TableViewCell : UITableViewCell
 

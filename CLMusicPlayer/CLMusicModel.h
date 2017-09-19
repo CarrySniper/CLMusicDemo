@@ -12,6 +12,9 @@
 
 @interface CLMusicModel : NSObject
 
+/** Id */
+@property (nonatomic, copy) NSString *songId;
+
 /** 歌名 */
 @property (nonatomic, copy) NSString *songName;
 

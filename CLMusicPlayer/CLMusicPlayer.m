@@ -180,7 +180,7 @@ static NSInteger _index = -1;
     if (CMTimeGetSeconds(self.player.currentItem.currentTime) > self.durationTime) {
         return self.durationTime;
     }
-    if (CMTimeGetSeconds(self.player.currentItem.currentTime) <= 0.0) {
+    if (CMTimeGetSeconds(self.player.currentItem.currentTime) < 0.0) {
         return 0.0;
     }
     return CMTimeGetSeconds(self.player.currentItem.currentTime);
@@ -188,6 +188,9 @@ static NSInteger _index = -1;
 
 #pragma mark 总时间
 - (NSTimeInterval)durationTime {
+    if (CMTimeGetSeconds(self.player.currentItem.duration) < 0.0) {
+        return 0.0;
+    }
     return CMTimeGetSeconds(self.player.currentItem.duration);
 }
 

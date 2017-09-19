@@ -50,15 +50,18 @@
 
 - (void)httpMusics
 {
+    // http://www.sojson.com/api/qqmusic/692771080/json QQ音乐
+    NSString *urlString = @"http://tingapi.ting.baidu.com/v1/restserver/ting?from=qianqian&version=2.1.0&method=baidu.ting.billboard.billList&format=json&type=1&offset=0&size=50";
+    
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     manager.requestSerializer.timeoutInterval = 30.0f;
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/html", nil];
     
-    [manager GET:@"http://www.sojson.com/api/qqmusic/692771080/json" parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
+    [manager GET:urlString parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
         NSDictionary *dict = [responseObject mutableCopy];
-        NSArray *array = dict[@"data"][@"playlist"];
+        NSArray *array = dict[@"song_list"];
         _musicsArray = [[NSArray yy_modelArrayWithClass:[CLMusicModel class] json:array] mutableCopy];
         
         [self.tableView reloadData];
@@ -93,7 +96,6 @@
     
     CLMusicModel *model = _musicsArray[indexPath.row];
     model.songLink = @"http://www.hitow.net/music/link/58273.mp3";
-    model.album = @"《异类》";
     
     NSString *contentPath = [[NSBundle mainBundle] pathForResource:@"国王与乞丐" ofType:@"lrc"];
     NSString *lyric = [NSString stringWithContentsOfFile:contentPath encoding:NSUTF8StringEncoding error:nil];
@@ -104,6 +106,7 @@
     
     _nameLabel.text = model.songName;
     _singerLabel.text = model.singerName;
+    [_thumbImage setImageWithURL:[NSURL URLWithString:model.thumb]];
 }
 
 #pragma mark - UITableView DataSource

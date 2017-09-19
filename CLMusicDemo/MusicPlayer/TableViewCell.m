@@ -14,6 +14,7 @@
 {
     self.nameLabel.text = model.songName;
     self.singerLabel.text = model.singerName;
+    [self.thumbImage setImageWithURL:[NSURL URLWithString:model.thumb]];
 }
 
 - (void)awakeFromNib {
