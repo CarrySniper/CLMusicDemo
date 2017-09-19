@@ -77,6 +77,19 @@
         self.status = CLMusicStatusPause;
     }
 }
+
+#pragma mark 停止播放
+- (void)cl_musicStop
+{
+    [self.player pause];
+    self.status = CLMusicStatusFinish;
+    [self.player seekToTime:CMTimeMake(0.0, 1.0)];
+    // MARK: 播放进度
+    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerPlayingProgress:)]) {
+        [self.protocol musicPlayerPlayingProgress:0.0];
+    }
+}
+
 #pragma mark 跳转音乐进度
 - (void)cl_seekToTimeBegin {
     self.isSeeking = YES;
@@ -109,19 +122,19 @@
 #pragma mark 更新锁屏歌词
 static NSInteger _index = -1;
 - (void)cl_updateLockScreen {
-    // MARK 歌词不变或者app前台运行不需要锁屏歌词
-    if (_index == _currectLyricIndex ||
-        [UIApplication sharedApplication].applicationState == UIApplicationStateActive ||
-        [UIApplication sharedApplication].applicationState == UIApplicationStateInactive) {
-        return;
-    }else{
-        _index = _currectLyricIndex;
-    }
+    // MARK 歌词不变或者app前台运行不需要锁屏歌词，但iOS10控制中心在前台也是需要的……
+    // [UIApplication sharedApplication].applicationState == UIApplicationStateActive
     
     // 歌曲封面
-    UIImage *artworkImage = [CLMusicLyricModel lockScreenImageWithLyrics:self.musicModel.lyrics
-                                                            currentIndex:_currectLyricIndex
-                                                         backgroundImage:self.musicModel.thumbImage];
+    static UIImage *artworkImage;
+    if (_index == _currectLyricIndex) {
+    }else{
+        _index = _currectLyricIndex;
+        artworkImage = [CLMusicLyricModel lockScreenImageWithLyrics:self.musicModel.lyrics
+                                                       currentIndex:_currectLyricIndex
+                                                    backgroundImage:self.musicModel.thumbImage];
+    }
+    
     MPMediaItemArtwork *itemArtwork = [[MPMediaItemArtwork alloc] initWithImage:artworkImage];
     
     /*  播放信息中心，用于控制锁屏界面显示的内容
@@ -178,7 +191,7 @@ static NSInteger _index = -1;
 #pragma mark 当前播放时间
 - (NSTimeInterval)currentTime {
     if (CMTimeGetSeconds(self.player.currentItem.currentTime) > self.durationTime) {
-        return self.durationTime;
+        return [self durationTime];
     }
     if (CMTimeGetSeconds(self.player.currentItem.currentTime) < 0.0) {
         return 0.0;
@@ -206,7 +219,7 @@ static NSInteger _index = -1;
 
 #pragma mark 时间格式转换
 - (NSString *)cl_formatTime:(NSTimeInterval)duration {
-    if (duration == 0) {
+    if (duration <= 0 || isnan(duration)) {
         return @"00:00";
     }
     NSInteger minute = (int)duration / 60;
@@ -303,7 +316,12 @@ static NSInteger _index = -1;
                 [weakSelf.protocol musicPlayerPlayingProgress:(weakSelf.currentTime / weakSelf.durationTime)];
             }
             
-            [weakSelf updateTheCurrentLyricIndex];
+            if (self.musicModel.lyrics.count > 0) {
+                [weakSelf updateTheCurrentLyricIndex];
+            }else{
+                [weakSelf cl_updateLockScreen];
+                weakSelf.currectLyricIndex = -1;
+            }
         }
     }];
 }
@@ -312,7 +330,7 @@ static NSInteger _index = -1;
 - (void)updateTheCurrentLyricIndex {
     // MARK: 歌词进度
     if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerLyricIndex:)]) {
-        NSInteger currectLyricIndex = 0;
+        static NSInteger currectLyricIndex = 0;
         for (CLMusicLyricModel *model in self.musicModel.lyrics) {
             if(self.currentTime >= model.beginTime - 0.28) {// 提前0.28s
                 currectLyricIndex = [self.musicModel.lyrics indexOfObject:model];

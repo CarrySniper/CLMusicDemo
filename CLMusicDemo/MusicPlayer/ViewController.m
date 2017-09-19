@@ -11,6 +11,7 @@
 #import "MusicPlayerViewController.h"
 
 #import <AFNetworking.h>
+#import <SVProgressHUD.h>
 
 @interface ViewController ()
 
@@ -53,6 +54,7 @@
     // http://www.sojson.com/api/qqmusic/692771080/json QQ音乐
     NSString *urlString = @"http://tingapi.ting.baidu.com/v1/restserver/ting?from=qianqian&version=2.1.0&method=baidu.ting.billboard.billList&format=json&type=1&offset=0&size=50";
     
+    [SVProgressHUD showWithStatus:@"(>﹏<)"];
     AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
     manager.requestSerializer.timeoutInterval = 30.0f;
     manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/html", nil];
@@ -60,13 +62,19 @@
     [manager GET:urlString parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
         
     } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        [SVProgressHUD showSuccessWithStatus:@"加载完成(^_^)"];
+        [SVProgressHUD dismissWithDelay:1.0];
+        
         NSDictionary *dict = [responseObject mutableCopy];
         NSArray *array = dict[@"song_list"];
         _musicsArray = [[NSArray yy_modelArrayWithClass:[CLMusicModel class] json:array] mutableCopy];
         
         [self.tableView reloadData];
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        [SVProgressHUD dismiss];
         UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"请求失败" message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleCancel handler:nil];
+        [alertController addAction:okAction];
         [self presentViewController:alertController animated:YES completion:nil];
     }];
 }
@@ -95,18 +103,45 @@
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
     CLMusicModel *model = _musicsArray[indexPath.row];
-    model.songLink = @"http://www.hitow.net/music/link/58273.mp3";
-    
-    NSString *contentPath = [[NSBundle mainBundle] pathForResource:@"国王与乞丐" ofType:@"lrc"];
-    NSString *lyric = [NSString stringWithContentsOfFile:contentPath encoding:NSUTF8StringEncoding error:nil];
-    model.lyrics = [CLMusicLyricModel lyrics:lyric];
-    
-    MusicPlayerViewController *viewController = [[MusicPlayerViewController alloc]initWithMusicModel:model];
-    [self.navigationController pushViewController:viewController animated:YES];    
     
     _nameLabel.text = model.songName;
     _singerLabel.text = model.singerName;
     [_thumbImage setImageWithURL:[NSURL URLWithString:model.thumb]];
+    model.thumbImage = _thumbImage.image;
+    
+//    model.songLink = @"http://www.hitow.net/music/link/58273.mp3";
+//    
+//    NSString *contentPath = [[NSBundle mainBundle] pathForResource:@"国王与乞丐" ofType:@"lrc"];
+//    NSString *lyric = [NSString stringWithContentsOfFile:contentPath encoding:NSUTF8StringEncoding error:nil];
+//    model.lyrics = [CLMusicLyricModel lyrics:lyric];
+    
+    NSString *urlString = [NSString stringWithFormat:@"http://tingapi.ting.baidu.com/v1/restserver/ting?from=android&version=2.4.0&method=baidu.ting.song.play&songid=%@", model.songId];
+    
+    [SVProgressHUD showWithStatus:@"(>﹏<)"];
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    manager.requestSerializer.timeoutInterval = 30.0f;
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/html", nil];
+    [manager GET:urlString parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
+        
+    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        [SVProgressHUD showSuccessWithStatus:@"加载完成(^_^)"];
+        [SVProgressHUD dismissWithDelay:1.0];
+        
+        NSDictionary *dict = [responseObject mutableCopy];
+        NSDictionary *songurl = dict[@"bitrate"];
+        model.songLink = songurl[@"show_link"];
+        
+        MusicPlayerViewController *viewController = [[MusicPlayerViewController alloc]initWithMusicModel:model];
+        [self.navigationController pushViewController:viewController animated:YES];
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        [SVProgressHUD dismiss];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"请求失败" message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleCancel handler:nil];
+        [alertController addAction:okAction];
+        [self presentViewController:alertController animated:YES completion:nil];
+    }];
+    
 }
 
 #pragma mark - UITableView DataSource
@@ -145,6 +180,11 @@
     
     [self.playerButton setTitle:@"播放" forState:UIControlStateNormal];
     [self.playerButton setTitle:@"暂停" forState:UIControlStateSelected];
+    
+    [SVProgressHUD setDefaultStyle:SVProgressHUDStyleCustom];
+    [SVProgressHUD setMinimumDismissTimeInterval:3];
+    [SVProgressHUD setForegroundColor:[UIColor whiteColor]];
+    [SVProgressHUD setBackgroundColor:[UIColor grayColor]];
 }
 
 @end

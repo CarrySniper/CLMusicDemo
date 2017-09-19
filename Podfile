@@ -6,8 +6,11 @@ target 'CLMusicDemo' do
   # use_frameworks!
 
   # Pods for CLMusicDemo
-  pod 'AFNetworking', '~> 3.1.0'
+  pod 'SVProgressHUD'
+  
+  pod 'AFNetworking'
   pod 'YYModel'
   pod 'Masonry'
+  
 
 end

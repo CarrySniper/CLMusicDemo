@@ -7,7 +7,6 @@
 //
 
 #import "MusicPlayerViewController.h"
-#import <AFNetworking.h>
 
 // 只要添加了这个宏，就不用带mas_前缀
 #define MAS_SHORTHAND
@@ -28,29 +27,13 @@
     self = [super init];
     if (self) {
         
-//        NSString *urlString = [NSString stringWithFormat:@"http://tingapi.ting.baidu.com/v1/restserver/ting?from=android&version=2.4.0&method=baidu.ting.song.getInfos&format=json&songid=%@&ts=1354960702678&e=pOwOqqTY0fS5jmtSdOJBh4XW4rQHDI7EhrJgILD3Z%%2FQ%%3D&nw=1&bduss=", musicModel.songId];
-//        
-//        AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
-//        manager.requestSerializer.timeoutInterval = 30.0f;
-//        manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/html", nil];
-//        [manager GET:urlString parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
-//            
-//        } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-//            NSDictionary *dict = [responseObject mutableCopy];
-//            NSDictionary *songurl = dict[@"songurl"];
-//            NSArray *urlarray = songurl[@"url"];
-//            
-//            NSDictionary *url = urlarray.firstObject;// 最后的码率最高
-//            musicModel.songLink = url[@"show_link"];
-//            
-//        } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-//            
-//        }];
         _musicModel = musicModel;
-        [self.musicPlayer cl_playMusic:musicModel];
         
         self.musicPlayer = [CLMusicPlayer instance];
-        self.musicPlayer.protocol = self;
+        [self.musicPlayer setProtocol:self];
+        [self.musicPlayer cl_playMusic:musicModel];
+                
+        // 远程控制类
         [self.musicPlayer cl_addRemoteCommandCenterWithTarget:self
                                                    playAction:@selector(playOrPauseAction:)
                                                   pauseAction:@selector(playOrPauseAction:)
@@ -83,12 +66,19 @@
 }
 
 #pragma mark - UIControl
+#pragma mark 播放暂停
 - (IBAction)playOrPauseAction:(id)sender {
     [self.musicPlayer cl_musicPlayOrPause];
 }
+
+#pragma mark 上一首
 - (IBAction)lastAction:(id)sender {
+    
 }
+
+#pragma mark 下一首
 - (IBAction)nextAction:(id)sender {
+    
 }
 
 - (IBAction)beginProgressAction:(id)sender {
@@ -144,14 +134,14 @@
 #pragma mark - UIScrollView DataSource
 static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-    if (scrollView == self.tableView) {
+    if (scrollView == self.tableView && [_musicModel.lyrics count]) { // 预防过度操作和崩溃
         isLyricScroll = YES;
     }
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    if (scrollView == self.tableView) {
-        if ([_musicModel.lyrics count] > 0 && isLyricScroll) {
+    if (scrollView == self.tableView && [_musicModel.lyrics count]) { // 预防过度操作和崩溃
+        if (isLyricScroll) {
             CGPoint center = CGPointMake(0, _tableView.contentOffset.y + _tableView.frame.size.height / 2);
             NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:center];
             CLMusicLyricModel *model = _musicModel.lyrics[indexPath.row];
@@ -160,7 +150,7 @@ static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
     }
 }
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    if (scrollView == self.tableView) {
+    if (scrollView == self.tableView && [_musicModel.lyrics count]) { // 预防过度操作和崩溃
         isLyricScroll = NO;
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.musicPlayer.currectLyricIndex inSection:0];
         [self.tableView reloadData];

@@ -93,6 +93,11 @@ typedef NS_ENUM(NSInteger, CLMusicStatus) {
 - (void)cl_musicPlayOrPause;
 
 /**
+ 停止
+ */
+- (void)cl_musicStop;
+
+/**
  跳转音乐进度 —— 开始
  */
 - (void)cl_seekToTimeBegin;
