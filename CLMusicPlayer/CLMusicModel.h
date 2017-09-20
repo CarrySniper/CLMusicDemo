@@ -24,8 +24,11 @@
 /** 专辑 */
 @property (nonatomic, copy) NSString *album;
 
-/** 链接 */
+/** 歌曲链接 */
 @property (nonatomic, copy) NSString *songLink;
+
+/** 歌词链接 */
+@property (nonatomic, copy) NSString *lyricLink;
 
 /** 歌词数组 */
 @property (nonatomic, copy) NSArray *lyrics;

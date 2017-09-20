@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="ApA-Ay-ina">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES" initialViewController="ApA-Ay-ina">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="12089"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13173"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--音乐列表-->
         <scene sceneID="tne-QT-ifu">
             <objects>
                 <viewController id="BYZ-38-t0r" customClass="ViewController" sceneMemberID="viewController">
@@ -56,7 +56,7 @@
                                     </button>
                                     <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="ien-b3-vmM">
                                         <rect key="frame" x="8" y="4" width="40" height="40"/>
-                                        <color key="backgroundColor" red="1" green="0.1017184444" blue="0.1050600849" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="40" id="0X5-UP-hnJ"/>
                                             <constraint firstAttribute="width" constant="40" id="Ir9-7t-zPx"/>
@@ -124,7 +124,7 @@
                             <constraint firstItem="4ch-18-JZU" firstAttribute="top" secondItem="GoB-ou-bR3" secondAttribute="bottom" id="cfP-al-EED"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="Vom-aF-73L"/>
+                    <navigationItem key="navigationItem" title="音乐列表" id="Vom-aF-73L"/>
                     <connections>
                         <outlet property="listsButton" destination="Lws-8L-xhH" id="ayT-PF-ID9"/>
                         <outlet property="nameLabel" destination="8dF-bP-CjL" id="crT-pY-sgR"/>
@@ -149,7 +149,7 @@
             <objects>
                 <navigationController id="ApA-Ay-ina" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="hgq-Rd-grd">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="44"/>
+                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </navigationBar>
                     <connections>

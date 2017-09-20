@@ -16,10 +16,9 @@
              @"songId" : @"song_id",
              @"singerName" : @"author",
              @"songName" : @"title",
-             @"songLink" : @"xsong_url",
+             @"lyricLink" : @"lrclink",
              @"album" : @"album_title",
              @"thumb" : @"pic_small",
-             
              };
 }
 

@@ -78,6 +78,11 @@
     if ([self.musicPlayer.musicModel.songId isEqualToString:musicModel.songId]) {
         return;
     }
+    // 歌词直接读取链接，未做本地存储。
+    //unsigned long encode = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000);
+    NSString *lyric = [NSString stringWithContentsOfURL:[NSURL URLWithString:musicModel.lyricLink] encoding:NSUTF8StringEncoding error:nil];
+    musicModel.lyrics = [CLMusicLyricModel lyrics:lyric];
+    
     NSString *urlString = [NSString stringWithFormat:@"http://tingapi.ting.baidu.com/v1/restserver/ting?from=android&version=2.4.0&method=baidu.ting.song.play&songid=%@", musicModel.songId];
     
     [SVProgressHUD showWithStatus:@"(>﹏<)"];
@@ -309,6 +314,7 @@ static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
     self.tableView.tableFooterView = [UIView new];
     
     self.tableView.rowHeight = 30.0;
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
     
     
     [self.playerButton setTitle:@"播放" forState:UIControlStateNormal];
