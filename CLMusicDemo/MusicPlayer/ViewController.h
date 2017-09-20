@@ -9,7 +9,12 @@
 #import <UIKit/UIKit.h>
 #import "CLMusicPlayer.h"
 
-@interface ViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, CLMusicPlayerProtocol>
+@class MusicPlayerViewController;
+
+@interface ViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, CLMusicPlayerProtocol> {
+    NSMutableArray *_musicsArray;
+    MusicPlayerViewController *_musicPlayerViewController;
+}
 
 @property (weak, nonatomic) IBOutlet UITableView *tableView;
 
@@ -20,7 +25,6 @@
 @property (weak, nonatomic) IBOutlet UIButton *playerButton;
 @property (weak, nonatomic) IBOutlet UIButton *listsButton;
 
-@property (strong, nonatomic) NSMutableArray *musicsArray;
 @property (nonatomic, strong) CLMusicPlayer *musicPlayer;
 
 @end

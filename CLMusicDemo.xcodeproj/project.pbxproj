@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		961DAD94BF86707A1CD0BB00 /* libPods-CLMusicDemo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4B046A7D1634CC80FEE11F8C /* libPods-CLMusicDemo.a */; };
+		990CF8311F7217A600804547 /* MusicMenuView.m in Sources */ = {isa = PBXBuildFile; fileRef = 990CF82F1F7217A600804547 /* MusicMenuView.m */; };
+		990CF8321F7217A600804547 /* MusicMenuView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 990CF8301F7217A600804547 /* MusicMenuView.xib */; };
 		99BDFA3D1F5F8FB3004A956B /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 99BDFA3C1F5F8FB3004A956B /* main.m */; };
 		99BDFA401F5F8FB3004A956B /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 99BDFA3F1F5F8FB3004A956B /* AppDelegate.m */; };
 		99BDFA461F5F8FB3004A956B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 99BDFA441F5F8FB3004A956B /* Main.storyboard */; };
@@ -27,6 +29,9 @@
 /* Begin PBXFileReference section */
 		4B046A7D1634CC80FEE11F8C /* libPods-CLMusicDemo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-CLMusicDemo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		526276AC29CEC503EE33A786 /* Pods-CLMusicDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CLMusicDemo.debug.xcconfig"; path = "Pods/Target Support Files/Pods-CLMusicDemo/Pods-CLMusicDemo.debug.xcconfig"; sourceTree = "<group>"; };
+		990CF82E1F7217A600804547 /* MusicMenuView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MusicMenuView.h; sourceTree = "<group>"; };
+		990CF82F1F7217A600804547 /* MusicMenuView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MusicMenuView.m; sourceTree = "<group>"; };
+		990CF8301F7217A600804547 /* MusicMenuView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MusicMenuView.xib; sourceTree = "<group>"; };
 		99BDFA381F5F8FB3004A956B /* CLMusicDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CLMusicDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		99BDFA3C1F5F8FB3004A956B /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		99BDFA3E1F5F8FB3004A956B /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -149,6 +154,9 @@
 				99BDFA871F5FF551004A956B /* MusicPlayerViewController.h */,
 				99BDFA881F5FF551004A956B /* MusicPlayerViewController.m */,
 				99BDFA891F5FF551004A956B /* MusicPlayerViewController.xib */,
+				990CF82E1F7217A600804547 /* MusicMenuView.h */,
+				990CF82F1F7217A600804547 /* MusicMenuView.m */,
+				990CF8301F7217A600804547 /* MusicMenuView.xib */,
 			);
 			path = MusicPlayer;
 			sourceTree = "<group>";
@@ -226,6 +234,7 @@
 				99BDFA481F5F8FB3004A956B /* Assets.xcassets in Resources */,
 				99BDFA8D1F61008B004A956B /* 国王与乞丐.lrc in Resources */,
 				99BDFA461F5F8FB3004A956B /* Main.storyboard in Resources */,
+				990CF8321F7217A600804547 /* MusicMenuView.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,6 +305,7 @@
 				99BDFA8A1F5FF551004A956B /* MusicPlayerViewController.m in Sources */,
 				99BDFA3D1F5F8FB3004A956B /* main.m in Sources */,
 				99BDFA7D1F5FF3F8004A956B /* CLMusicPlayer.m in Sources */,
+				990CF8311F7217A600804547 /* MusicMenuView.m in Sources */,
 				99BDFA7C1F5FF3F8004A956B /* CLMusicModel.m in Sources */,
 				99BDFA7B1F5FF3F8004A956B /* CLMusicLyricModel.m in Sources */,
 			);

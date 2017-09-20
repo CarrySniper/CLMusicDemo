@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "TableViewCell.h"
 #import "MusicPlayerViewController.h"
+#import "MusicMenuView.h"
 
 #import <AFNetworking.h>
 #import <SVProgressHUD.h>
@@ -71,10 +72,13 @@
         
         [self.tableView reloadData];
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        [SVProgressHUD dismiss];
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"请求失败" message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleCancel handler:nil];
+        [SVProgressHUD dismiss];        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"请求失败" message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"重新请求" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+            [self httpMusics];
+        }];
+        UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil];
         [alertController addAction:okAction];
+        [alertController addAction:cancelAction];
         [self presentViewController:alertController animated:YES completion:nil];
     }];
 }
@@ -85,7 +89,15 @@
 }
 
 - (IBAction)showListsAction:(id)sender {
-    
+    [[MusicMenuView instance] showWithData:_musicPlayerViewController.currentMusics];
+}
+
+#pragma mark 跳转到当前播放音乐页
+- (IBAction)toolViewGesture:(id)sender {
+    if (self.musicPlayer.musicModel) {
+        _musicPlayerViewController = [[MusicPlayerViewController alloc]initWithMusicModel:self.musicPlayer.musicModel withMusics:_musicsArray];
+        [self.navigationController pushViewController:_musicPlayerViewController animated:YES];
+    }
 }
 
 #pragma mark - CLMusicPlayer Protocol
@@ -115,33 +127,10 @@
 //    NSString *lyric = [NSString stringWithContentsOfFile:contentPath encoding:NSUTF8StringEncoding error:nil];
 //    model.lyrics = [CLMusicLyricModel lyrics:lyric];
     
+    _musicPlayerViewController = [[MusicPlayerViewController alloc]initWithMusicModel:model withMusics:_musicsArray];
+    [self.navigationController pushViewController:_musicPlayerViewController animated:YES];
+    
     NSString *urlString = [NSString stringWithFormat:@"http://tingapi.ting.baidu.com/v1/restserver/ting?from=android&version=2.4.0&method=baidu.ting.song.play&songid=%@", model.songId];
-    
-    [SVProgressHUD showWithStatus:@"(>﹏<)"];
-    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
-    manager.requestSerializer.timeoutInterval = 30.0f;
-    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/html", nil];
-    [manager GET:urlString parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
-        
-    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
-        [SVProgressHUD showSuccessWithStatus:@"加载完成(^_^)"];
-        [SVProgressHUD dismissWithDelay:1.0];
-        
-        NSDictionary *dict = [responseObject mutableCopy];
-        NSDictionary *songurl = dict[@"bitrate"];
-        model.songLink = songurl[@"show_link"];
-        
-        MusicPlayerViewController *viewController = [[MusicPlayerViewController alloc]initWithMusicModel:model];
-        [self.navigationController pushViewController:viewController animated:YES];
-        
-    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
-        [SVProgressHUD dismiss];
-        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"请求失败" message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
-        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleCancel handler:nil];
-        [alertController addAction:okAction];
-        [self presentViewController:alertController animated:YES completion:nil];
-    }];
-    
 }
 
 #pragma mark - UITableView DataSource

@@ -12,7 +12,7 @@
 
 #pragma mark 生成锁屏歌词图片
 + (UIImage *)lockScreenImageWithLyrics:(NSArray *)lyrics
-                          currentIndex:(NSUInteger)currentIndex
+                          currentIndex:(NSInteger)currentIndex
                        backgroundImage:(UIImage *)backgroundImage {
     
     CGSize size = CGSizeMake(500, 500);
@@ -25,33 +25,35 @@
     UIImage *imageLrc = [UIImage imageNamed:@"music_lyric"];
     [imageLrc drawInRect:CGRectMake(0, size.height - 120, size.width, 120)];
     
-    // 绘制文字
-    NSString *textTop = currentIndex == 0 ? @"" : [lyrics[currentIndex - 1] content];
-    NSString *textCenter = [lyrics[currentIndex] content];
-    NSString *textBottom = currentIndex == lyrics.count - 1 ? @"" : [lyrics[currentIndex + 1] content];
-    
-    NSString *formatString = [NSString stringWithFormat:@"%@\n%@\n%@", textTop, textCenter, textBottom];
-    //修改属性
-    NSMutableAttributedString *attrStr = [[NSMutableAttributedString alloc]initWithString:formatString];
-    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
-    paragraphStyle.alignment = NSTextAlignmentCenter;
-    paragraphStyle.lineSpacing = 5.0;
-    [attrStr addAttributes:@{
-                             NSForegroundColorAttributeName:[UIColor whiteColor],//字体前景颜色（字体颜色）
-                             NSFontAttributeName:[UIFont systemFontOfSize:23],//字体大小
-                             NSParagraphStyleAttributeName : paragraphStyle
-                             }
-                     range:NSMakeRange(0, [formatString length])];
-    [attrStr addAttributes:@{
-                             NSForegroundColorAttributeName:[UIColor redColor],//字体前景颜色（字体颜色）
-                             NSFontAttributeName:[UIFont systemFontOfSize:25],//字体大小
-                             NSParagraphStyleAttributeName : paragraphStyle
-                             }
-                     range:NSMakeRange([textTop length] + 1, [textCenter length])];
-    
-    CGRect textRect = CGRectMake(0, size.height - 100, size.width, 100);
-    
-    [attrStr drawInRect:textRect];
+    if (lyrics && currentIndex >= 0) {
+        // 绘制文字
+        NSString *textTop = currentIndex == 0 ? @"" : [lyrics[currentIndex - 1] content];
+        NSString *textCenter = [lyrics[currentIndex] content];
+        NSString *textBottom = currentIndex == lyrics.count - 1 ? @"" : [lyrics[currentIndex + 1] content];
+        
+        NSString *formatString = [NSString stringWithFormat:@"%@\n%@\n%@", textTop, textCenter, textBottom];
+        //修改属性
+        NSMutableAttributedString *attrStr = [[NSMutableAttributedString alloc]initWithString:formatString];
+        NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+        paragraphStyle.alignment = NSTextAlignmentCenter;
+        paragraphStyle.lineSpacing = 5.0;
+        [attrStr addAttributes:@{
+                                 NSForegroundColorAttributeName:[UIColor whiteColor],//字体前景颜色（字体颜色）
+                                 NSFontAttributeName:[UIFont systemFontOfSize:23],//字体大小
+                                 NSParagraphStyleAttributeName : paragraphStyle
+                                 }
+                         range:NSMakeRange(0, [formatString length])];
+        [attrStr addAttributes:@{
+                                 NSForegroundColorAttributeName:[UIColor redColor],//字体前景颜色（字体颜色）
+                                 NSFontAttributeName:[UIFont systemFontOfSize:25],//字体大小
+                                 NSParagraphStyleAttributeName : paragraphStyle
+                                 }
+                         range:NSMakeRange([textTop length] + 1, [textCenter length])];
+        
+        CGRect textRect = CGRectMake(0, size.height - 100, size.width, 100);
+        
+        [attrStr drawInRect:textRect];
+    }
     
     // 从上下文中取出图片
     UIImage *image = UIGraphicsGetImageFromCurrentImageContext();

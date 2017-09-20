@@ -7,6 +7,7 @@
 //
 
 #import "MusicPlayerViewController.h"
+#import "MusicMenuView.h"
 
 // 只要添加了这个宏，就不用带mas_前缀
 #define MAS_SHORTHAND
@@ -15,6 +16,9 @@
 // 这个头文件一定要放在上面两个宏的后面
 #import <Masonry.h>
 
+#import <AFNetworking.h>
+#import <SVProgressHUD.h>
+
 
 @interface MusicPlayerViewController ()
 
@@ -22,16 +26,15 @@
 
 @implementation MusicPlayerViewController
 
-- (instancetype)initWithMusicModel:(CLMusicModel *)musicModel
+- (instancetype)initWithMusicModel:(CLMusicModel *)currentMusicModel withMusics:(NSArray *)defaultMusics
 {
     self = [super init];
     if (self) {
         
-        _musicModel = musicModel;
+        _defaultMusics = defaultMusics;
         
         self.musicPlayer = [CLMusicPlayer instance];
         [self.musicPlayer setProtocol:self];
-        [self.musicPlayer cl_playMusic:musicModel];
                 
         // 远程控制类
         [self.musicPlayer cl_addRemoteCommandCenterWithTarget:self
@@ -39,6 +42,11 @@
                                                   pauseAction:@selector(playOrPauseAction:)
                                                lastSongAction:@selector(lastAction:)
                                                nextSongAction:@selector(nextAction:)];
+        
+        // FIXME: 当前播放模式，需要自己关联用户信息，持久化保持会好一点
+        [self switchMusicPlayMode:0];
+        self.title = currentMusicModel.songName;
+        [self playingMusic:currentMusicModel];
     }
     return self;
 }
@@ -62,7 +70,38 @@
     [super viewWillAppear:animated];
     
     // 设置状态
-    [self musicPlayerStatusDidChange:self.musicPlayer.status];
+    [self musicPlayerStatusChange:self.musicPlayer.status];
+}
+
+// FIXME: 这里是根据音乐id来获取音乐链接的，要根据实际需求替换这个方法
+- (void)playingMusic:(CLMusicModel *)musicModel {
+    if ([self.musicPlayer.musicModel.songId isEqualToString:musicModel.songId]) {
+        return;
+    }
+    NSString *urlString = [NSString stringWithFormat:@"http://tingapi.ting.baidu.com/v1/restserver/ting?from=android&version=2.4.0&method=baidu.ting.song.play&songid=%@", musicModel.songId];
+    
+    [SVProgressHUD showWithStatus:@"(>﹏<)"];
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+    manager.requestSerializer.timeoutInterval = 30.0f;
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/json", @"text/html", nil];
+    [manager GET:urlString parameters:nil progress:^(NSProgress * _Nonnull downloadProgress) {
+        
+    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+        [SVProgressHUD showSuccessWithStatus:@"加载完成(^_^)"];
+        [SVProgressHUD dismissWithDelay:1.0];
+        
+        NSDictionary *dict = [responseObject mutableCopy];
+        NSDictionary *songurl = dict[@"bitrate"];
+        musicModel.songLink = songurl[@"show_link"];
+        [self.musicPlayer cl_playMusic:musicModel];
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        [SVProgressHUD dismiss];
+        UIAlertController *alertController = [UIAlertController alertControllerWithTitle:@"请求失败" message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction *okAction = [UIAlertAction actionWithTitle:@"确认" style:UIAlertActionStyleCancel handler:nil];
+        [alertController addAction:okAction];
+        [self presentViewController:alertController animated:YES completion:nil];
+    }];
 }
 
 #pragma mark - UIControl
@@ -73,14 +112,79 @@
 
 #pragma mark 上一首
 - (IBAction)lastAction:(id)sender {
-    
+    NSUInteger currentIndex = [_currentMusics indexOfObject:_musicPlayer.musicModel];
+    if (currentIndex <= 0) {
+        if (self.musicPlayMode == MusicPlayMode_ListReplay) {
+            CLMusicModel *model = _currentMusics.lastObject;
+            [self playingMusic:model];
+        }else{
+            NSLog(@"没有上一首啦");
+        }
+    }else{
+        CLMusicModel *model = _currentMusics[currentIndex - 1];
+        [self playingMusic:model];
+    }
 }
 
 #pragma mark 下一首
 - (IBAction)nextAction:(id)sender {
-    
+    NSUInteger currentIndex = [_currentMusics indexOfObject:_musicPlayer.musicModel];
+    if (currentIndex >= _currentMusics.count - 1) {
+        if (self.musicPlayMode == MusicPlayMode_ListReplay) {
+            CLMusicModel *model = _currentMusics.firstObject;
+            [self playingMusic:model];
+        }else{
+            NSLog(@"没有下一首啦");
+        }
+    }else{
+        CLMusicModel *model = _currentMusics[currentIndex + 1];
+        [self playingMusic:model];
+    }
 }
 
+#pragma mark 播放模式
+- (IBAction)modeAction:(id)sender {
+    if (_musicPlayMode > 3) {
+        self.musicPlayMode = 0;
+    }else{
+        self.musicPlayMode++;
+    }
+    [self switchMusicPlayMode:self.musicPlayMode];
+}
+- (void)switchMusicPlayMode:(MusicPlayMode)musicPlayMode {
+    switch (musicPlayMode) {
+        case MusicPlayMode_Nomal: {
+            [_modeButton setTitle:@"顺序" forState:UIControlStateNormal];
+            _currentMusics = [_defaultMusics mutableCopy];
+        }
+            break;
+        case MusicPlayMode_SingalReplay: {
+            [_modeButton setTitle:@"单曲" forState:UIControlStateNormal];
+            _currentMusics = [_defaultMusics mutableCopy];
+        }
+            break;
+        case MusicPlayMode_ListReplay: {
+            [_modeButton setTitle:@"循环" forState:UIControlStateNormal];
+            _currentMusics = [_defaultMusics mutableCopy];
+        }
+            break;
+        case MusicPlayMode_RandomPlay: {
+            [_modeButton setTitle:@"随机" forState:UIControlStateNormal];
+            _currentMusics = [self.musicPlayer cl_randomArray:_defaultMusics];
+        }
+            break;
+        default:
+            break;
+    }
+}
+
+#pragma mark 播放列表（顺序修改后的）
+- (IBAction)listAction:(id)sender {
+    
+    [[MusicMenuView instance] showWithData:self.currentMusics];
+}
+
+#pragma mark UISlider 拖动修改播放进度
 - (IBAction)beginProgressAction:(id)sender {
     [self.musicPlayer cl_seekToTimeBegin];
 }
@@ -100,8 +204,13 @@
 }
 
 #pragma mark - CLMusicPlayer Protocol
+#pragma mark 音乐切换回调（切歌）
+- (void)musicPlayerReplaceMusic:(CLMusicModel *)musicModel {
+    self.title = musicModel.songName;
+}
+
 #pragma mark 音乐播放状态
-- (void)musicPlayerStatusDidChange:(CLMusicStatus)musicStatus {
+- (void)musicPlayerStatusChange:(CLMusicStatus)musicStatus {
     if (musicStatus == CLMusicStatusPlaying || musicStatus == CLMusicStatusReadyToPlay) {
         [self.playerButton setSelected:YES];
     }else{
@@ -122,9 +231,19 @@
     self.totalTime.text = [self.musicPlayer cl_formatTime:[self.musicPlayer durationTime]];
 }
 
+#pragma mark 音乐播放结束
+- (void)musicPlayerEndPlay {
+    if (_musicPlayMode == MusicPlayMode_SingalReplay) {
+        // 单曲循环
+        [self.musicPlayer cl_seekToTimeEndWithProgress:0.0 completionHandler:nil];
+    }else{
+        [self nextAction:nil];
+    }
+}
+
 #pragma mark 音乐歌词当前下标
 - (void)musicPlayerLyricIndex:(NSInteger)lyricIndex {
-    if ([_musicModel.lyrics count] > 0 && isLyricScroll == NO) {
+    if ([_musicPlayer.musicModel.lyrics count] > 0 && isLyricScroll == NO) {
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:lyricIndex inSection:0];
         [self.tableView reloadData];
         [self.tableView scrollToRowAtIndexPath:indexPath atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
@@ -134,23 +253,23 @@
 #pragma mark - UIScrollView DataSource
 static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView {
-    if (scrollView == self.tableView && [_musicModel.lyrics count]) { // 预防过度操作和崩溃
+    if (scrollView == self.tableView && [_musicPlayer.musicModel.lyrics count]) { // 预防过度操作和崩溃
         isLyricScroll = YES;
     }
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
-    if (scrollView == self.tableView && [_musicModel.lyrics count]) { // 预防过度操作和崩溃
+    if (scrollView == self.tableView && [_musicPlayer.musicModel.lyrics count]) { // 预防过度操作和崩溃
         if (isLyricScroll) {
             CGPoint center = CGPointMake(0, _tableView.contentOffset.y + _tableView.frame.size.height / 2);
             NSIndexPath *indexPath = [self.tableView indexPathForRowAtPoint:center];
-            CLMusicLyricModel *model = _musicModel.lyrics[indexPath.row];
+            CLMusicLyricModel *model = _musicPlayer.musicModel.lyrics[indexPath.row];
             NSLog(@"歌词滚动到时间：%@", [self.musicPlayer cl_formatTime:model.beginTime]);
         }
     }
 }
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView {
-    if (scrollView == self.tableView && [_musicModel.lyrics count]) { // 预防过度操作和崩溃
+    if (scrollView == self.tableView && [_musicPlayer.musicModel.lyrics count]) { // 预防过度操作和崩溃
         isLyricScroll = NO;
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.musicPlayer.currectLyricIndex inSection:0];
         [self.tableView reloadData];
@@ -160,7 +279,7 @@ static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
 
 #pragma mark - UITableView DataSource
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return [_musicModel.lyrics count];
+    return [_musicPlayer.musicModel.lyrics count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -172,7 +291,7 @@ static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
         cell = [[MusicPlayerCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:identifier];
     }
     
-    CLMusicLyricModel *model = _musicModel.lyrics[indexPath.row];
+    CLMusicLyricModel *model = _musicPlayer.musicModel.lyrics[indexPath.row];
     cell.lyricLabel.text = model.content;
     if (self.musicPlayer.currectLyricIndex == indexPath.row) {
         cell.lyricLabel.textColor = [UIColor redColor];

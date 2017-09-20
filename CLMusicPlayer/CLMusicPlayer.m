@@ -14,8 +14,6 @@
 @property (nonatomic, strong) AVPlayer *player;
 // 播放器状态监听
 @property (nonatomic, strong) id playTimeObserver;
-// 当前播放的音乐Model
-@property (nonatomic, strong, readonly) CLMusicModel *musicModel;
 
 /** 是否正在跳转播放时间 */
 @property (nonatomic, assign) BOOL isSeeking;
@@ -57,6 +55,10 @@
     self.player = [self playingWithUrlString:musicModel.songLink];
     [self.player play];
     self.status = CLMusicStatusPlaying;
+    
+    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerReplaceMusic:)]) {
+        [self.protocol musicPlayerReplaceMusic:musicModel];
+    }
 }
 
 #pragma mark 音乐播放暂停
@@ -100,7 +102,7 @@
     [self.player seekToTime:changedTime completionHandler:^(BOOL finished) {
         if (finished) {
             self.isSeeking = NO;
-            completionHandler();
+            if (completionHandler) completionHandler();
         }
     }];
 }
@@ -183,8 +185,8 @@ static NSInteger _index = -1;
     }
     _status = status;
     
-    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerStatusDidChange:)]) {
-        [self.protocol musicPlayerStatusDidChange:status];
+    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerStatusChange:)]) {
+        [self.protocol musicPlayerStatusChange:status];
     }
 }
 
@@ -293,10 +295,10 @@ static NSInteger _index = -1;
     
     // Notification
     // 添加视频播放结束通知
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(movieToEnd:)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerToEnd:)
                                                  name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
     // 添加异常中断通知
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(movieStalled:)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerStalled:)
                                                  name:AVPlayerItemPlaybackStalledNotification object:nil];
     // 进入后台，一些耗性能的动作要暂停
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enterBcakground)
@@ -346,7 +348,6 @@ static NSInteger _index = -1;
     }
 }
 
-
 - (void)removePlayerListener {
     
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
@@ -357,19 +358,18 @@ static NSInteger _index = -1;
     [self.player removeTimeObserver:_playTimeObserver];
 }
 
-- (void)movieToEnd:(NSNotification *)notification {
+- (void)playerToEnd:(NSNotification *)notification {
     NSLog(@"%@",NSStringFromSelector(_cmd));
     self.status = CLMusicStatusFinish;
     [self.player pause];
-//    // 播放结束
-//    if (self.endBlock) dispatch_async(dispatch_get_main_queue(), ^{
-//        self.endBlock();
-//    });
+    // MARK: 播放结束
+    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerEndPlay)]) {
+        [self.protocol musicPlayerEndPlay];
+    }
 }
-- (void)movieStalled:(NSNotification *)notification {
+- (void)playerStalled:(NSNotification *)notification {
     NSLog(@"%@",NSStringFromSelector(_cmd));
-    [_player pause];
-    
+    [_player play];
 }
 - (void)enterBcakground {
     NSLog(@"%@",NSStringFromSelector(_cmd));

@@ -28,10 +28,16 @@ typedef NS_ENUM(NSInteger, CLMusicStatus) {
 @protocol  CLMusicPlayerProtocol<NSObject>
 @optional
 
+
+/**
+ 音乐切换回调
+ */
+- (void)musicPlayerReplaceMusic:(CLMusicModel *)musicModel;
+
 /**
  音乐播放状态回调
  */
-- (void)musicPlayerStatusDidChange:(CLMusicStatus)musicStatus;
+- (void)musicPlayerStatusChange:(CLMusicStatus)musicStatus;
 
 /**
  音乐缓存进度
@@ -42,6 +48,11 @@ typedef NS_ENUM(NSInteger, CLMusicStatus) {
  音乐播放进度
  */
 - (void)musicPlayerPlayingProgress:(float)progress;
+
+/**
+ 音乐播放结束
+ */
+- (void)musicPlayerEndPlay;
 
 /**
  音乐歌词当前下标
@@ -55,6 +66,9 @@ typedef NS_ENUM(NSInteger, CLMusicStatus) {
 
 #pragma mark -
 #pragma mark 声明属性变量
+
+/** 当前播放的音乐Model */
+@property (nonatomic, strong, readonly) CLMusicModel *musicModel;
 
 /** 歌词的数组 */
 @property (nonatomic, strong) NSMutableArray *lyricArray;

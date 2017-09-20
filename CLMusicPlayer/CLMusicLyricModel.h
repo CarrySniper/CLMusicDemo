@@ -30,7 +30,7 @@
  @return 图片
  */
 + (UIImage *)lockScreenImageWithLyrics:(NSArray *)lyrics
-                          currentIndex:(NSUInteger)currentIndex
+                          currentIndex:(NSInteger)currentIndex
                        backgroundImage:(UIImage *)backgroundImage;
 
 + (NSArray *)lyrics:(NSString *)lyric;
