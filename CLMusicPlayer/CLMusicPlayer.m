@@ -7,6 +7,7 @@
 //
 
 #import "CLMusicPlayer.h"
+#import "CLMusicPlayer+Handle.h"
 
 @interface CLMusicPlayer()
 
@@ -23,7 +24,7 @@
 @implementation CLMusicPlayer
 
 #pragma mark - 初始化
-+ (instancetype)instance {
++ (instancetype)sharedInstance {
     return [[self alloc] init];
 }
 
@@ -45,7 +46,7 @@
 }
 
 #pragma mark 开始播放音乐
-- (void)cl_playMusic:(CLMusicModel *)musicModel
+- (void)playMusic:(CLMusicModel *)musicModel
 {
     if ([_musicModel isEqual:musicModel]) {
         return;// 避免过分调用
@@ -56,13 +57,13 @@
     [self.player play];
     self.status = CLMusicStatusPlaying;
     
-    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerReplaceMusic:)]) {
-        [self.protocol musicPlayerReplaceMusic:musicModel];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(cl_musicPlayerReplaceMusic:)]) {
+        [self.delegate cl_musicPlayerReplaceMusic:musicModel];
     }
 }
 
 #pragma mark 音乐播放暂停
-- (void)cl_musicPlayOrPause
+- (void)musicPlayOrPause
 {
     if (self.player == nil) {
         // 还没有选择音乐
@@ -81,23 +82,23 @@
 }
 
 #pragma mark 停止播放
-- (void)cl_musicStop
+- (void)musicStop
 {
     [self.player pause];
     self.status = CLMusicStatusFinish;
     [self.player seekToTime:CMTimeMake(0.0, 1.0)];
     // MARK: 播放进度
-    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerPlayingProgress:)]) {
-        [self.protocol musicPlayerPlayingProgress:0.0];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(cl_musicPlayerPlayingProgress:)]) {
+        [self.delegate cl_musicPlayerPlayingProgress:0.0];
     }
 }
 
 #pragma mark 跳转音乐进度
-- (void)cl_seekToTimeBegin {
+- (void)seekToTimeBegin {
     self.isSeeking = YES;
 }
 
-- (void)cl_seekToTimeEndWithProgress:(CGFloat)progress completionHandler:(void (^)())completionHandler {
+- (void)seekToTimeEndWithProgress:(CGFloat)progress completionHandler:(void (^)(void))completionHandler {
     CMTime changedTime = CMTimeMake(self.durationTime * progress, 1.0);
     [self.player seekToTime:changedTime completionHandler:^(BOOL finished) {
         if (finished) {
@@ -107,57 +108,6 @@
     }];
 }
 
-#pragma mark 添加远程控制中心
-- (void)cl_addRemoteCommandCenterWithTarget:(id)target
-                                 playAction:(SEL)playAction
-                                pauseAction:(SEL)pauseAction
-                             lastSongAction:(SEL)lastAction
-                             nextSongAction:(SEL)nextAction {
-    // 远程控制类    播放/暂停/上一曲/下一曲
-    MPRemoteCommandCenter *center = [MPRemoteCommandCenter sharedCommandCenter];
-    [center.playCommand addTarget:target action:playAction];
-    [center.pauseCommand addTarget:target action:pauseAction];
-    [center.previousTrackCommand addTarget:target action:lastAction];
-    [center.nextTrackCommand addTarget:target action:nextAction];
-}
-
-#pragma mark 更新锁屏歌词
-static NSInteger _index = -1;
-- (void)cl_updateLockScreen {
-    // MARK 歌词不变或者app前台运行不需要锁屏歌词，但iOS10控制中心在前台也是需要的……
-    // [UIApplication sharedApplication].applicationState == UIApplicationStateActive
-    
-    // 歌曲封面
-    static UIImage *artworkImage;
-    if (_index == _currectLyricIndex) {
-    }else{
-        _index = _currectLyricIndex;
-        artworkImage = [CLMusicLyricModel lockScreenImageWithLyrics:self.musicModel.lyrics
-                                                       currentIndex:_currectLyricIndex
-                                                    backgroundImage:self.musicModel.thumbImage];
-    }
-    
-    MPMediaItemArtwork *itemArtwork = [[MPMediaItemArtwork alloc] initWithImage:artworkImage];
-    
-    /*  播放信息中心，用于控制锁屏界面显示的内容
-     MPMediaItemPropertyAlbumTitle       专辑
-     MPMediaItemPropertyTitle            歌名
-     MPMediaItemPropertyArtist           歌手
-     MPMediaItemPropertyArtwork          歌曲封面
-     MPMediaItemPropertyComposer         编曲
-     MPMediaItemPropertyPlaybackDuration 持续时间
-     MPNowPlayingInfoPropertyElapsedPlaybackTime  当前播放时间
-     */
-    MPNowPlayingInfoCenter *infoCenter = [MPNowPlayingInfoCenter defaultCenter];
-    infoCenter.nowPlayingInfo = @{
-                                  MPMediaItemPropertyAlbumTitle : self.musicModel.album,
-                                  MPMediaItemPropertyArtist : self.musicModel.singerName,
-                                  MPMediaItemPropertyTitle : self.musicModel.songName,
-                                  MPMediaItemPropertyPlaybackDuration : @(self.durationTime),
-                                  MPNowPlayingInfoPropertyElapsedPlaybackTime : @(self.currentTime),
-                                  MPMediaItemPropertyArtwork : itemArtwork,
-                                  };
-}
 
 #pragma mark - setting getting方法
 #pragma mark 播放媒体链接（内部方法）
@@ -185,8 +135,8 @@ static NSInteger _index = -1;
     }
     _status = status;
     
-    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerStatusChange:)]) {
-        [self.protocol musicPlayerStatusChange:status];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(cl_musicPlayerStatusChange:)]) {
+        [self.delegate cl_musicPlayerStatusChange:status];
     }
 }
 
@@ -219,37 +169,15 @@ static NSInteger _index = -1;
     return result;
 }
 
-#pragma mark 时间格式转换
-- (NSString *)cl_formatTime:(NSTimeInterval)duration {
-    if (duration <= 0 || isnan(duration)) {
-        return @"00:00";
-    }
-    NSInteger minute = (int)duration / 60;
-    NSInteger second = (int)duration % 60;
-    return [NSString stringWithFormat:@"%.02ld:%.02ld", (long)minute, (long)second];
-}
-
-#pragma mark 为数组随机排序
-- (NSArray *)cl_randomArray:(NSArray *)array {
-    NSArray *randomArray = [array sortedArrayUsingComparator:^NSComparisonResult(id obj1, id obj2) {
-        int seed = arc4random_uniform(2);   // 生成0～(2-1)的随机数
-        if (seed) {
-            return NSOrderedAscending;
-        } else {
-            return NSOrderedDescending;
-        }
-    }];
-    return randomArray;
-}
 
 #pragma mark - PlayerItem监听
-- (void)addPlayerItemListener
-{
+- (void)addPlayerItemListener {
     // KVO
     AVPlayerItem *playerItem = self.player.currentItem;
     [playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:nil];
     [playerItem addObserver:self forKeyPath:@"loadedTimeRanges" options:NSKeyValueObservingOptionNew context:nil];
 }
+
 - (void)removePlayerItemListener {
     AVPlayerItem *playerItem = self.player.currentItem;
     [playerItem removeObserver:self forKeyPath:@"status"];
@@ -283,16 +211,16 @@ static NSInteger _index = -1;
     } else if ([keyPath isEqualToString:@"loadedTimeRanges"]) {    NSLog(@"loadedTimeRanges");
         self.status = CLMusicStatusPlaying;
         // MARK: 缓存进度
-        if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerCacheProgress:)]) {
-            [self.protocol musicPlayerCacheProgress:(self.availableDuration / self.durationTime)];
+        if (self.delegate && [self.delegate respondsToSelector:@selector(cl_musicPlayerCacheProgress:)]) {
+            [self.delegate cl_musicPlayerCacheProgress:(self.availableDuration / self.durationTime)];
         }
     } else {
         NSLog(@"其他问题");
     }
 }
+
 #pragma mark - Player监听
 - (void)addPlayerListener {
-    
     // Notification
     // 添加视频播放结束通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerToEnd:)
@@ -300,12 +228,6 @@ static NSInteger _index = -1;
     // 添加异常中断通知
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerStalled:)
                                                  name:AVPlayerItemPlaybackStalledNotification object:nil];
-    // 进入后台，一些耗性能的动作要暂停
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(enterBcakground)
-                                                 name:UIApplicationDidEnterBackgroundNotification object:nil];
-    // 返回前台，恢复需要的动作
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(becomeForeground)
-                                                 name:UIApplicationDidBecomeActiveNotification object:nil];
     
     // KVO
     __weak typeof(self)weakSelf = self;
@@ -314,14 +236,14 @@ static NSInteger _index = -1;
         // FIXME: 当正在拖动滑块，修改播放时间的时候，就不需要自动更新了
         if (!weakSelf.isSeeking) {
             // MARK: 播放进度
-            if (weakSelf.protocol && [weakSelf.protocol respondsToSelector:@selector(musicPlayerPlayingProgress:)]) {
-                [weakSelf.protocol musicPlayerPlayingProgress:(weakSelf.currentTime / weakSelf.durationTime)];
+            if (weakSelf.delegate && [weakSelf.delegate respondsToSelector:@selector(cl_musicPlayerPlayingProgress:)]) {
+                [weakSelf.delegate cl_musicPlayerPlayingProgress:(weakSelf.currentTime / weakSelf.durationTime)];
             }
             
             if (self.musicModel.lyrics.count > 0) {
                 [weakSelf updateTheCurrentLyricIndex];
             }else{
-                [weakSelf cl_updateLockScreen];
+                [weakSelf updateLockScreen];
                 weakSelf.currectLyricIndex = -1;
             }
         }
@@ -331,7 +253,7 @@ static NSInteger _index = -1;
 #pragma mark -  更新歌词显示
 - (void)updateTheCurrentLyricIndex {
     // MARK: 歌词进度
-    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerLyricIndex:)]) {
+    if (self.delegate && [self.delegate respondsToSelector:@selector(cl_musicPlayerLyricIndex:)]) {
         static NSInteger currectLyricIndex = 0;
         for (CLMusicLyricModel *model in self.musicModel.lyrics) {
             if(self.currentTime >= model.beginTime - 0.28) {// 提前0.28s
@@ -343,8 +265,8 @@ static NSInteger _index = -1;
             return;// 避免过分调用
         }
         self.currectLyricIndex = currectLyricIndex;
-        [self.protocol musicPlayerLyricIndex:(self.currectLyricIndex)];
-        [self cl_updateLockScreen];
+        [self.delegate cl_musicPlayerLyricIndex:(self.currectLyricIndex)];
+        [self updateLockScreen];
     }
 }
 
@@ -359,23 +281,18 @@ static NSInteger _index = -1;
 }
 
 - (void)playerToEnd:(NSNotification *)notification {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
+    //NSLog(@"%@",NSStringFromSelector(_cmd));
     self.status = CLMusicStatusFinish;
     [self.player pause];
     // MARK: 播放结束
-    if (self.protocol && [self.protocol respondsToSelector:@selector(musicPlayerEndPlay)]) {
-        [self.protocol musicPlayerEndPlay];
+    if (self.delegate && [self.delegate respondsToSelector:@selector(cl_musicPlayerEndPlay)]) {
+        [self.delegate cl_musicPlayerEndPlay];
     }
 }
+
 - (void)playerStalled:(NSNotification *)notification {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
+    //NSLog(@"%@",NSStringFromSelector(_cmd));
     [_player play];
-}
-- (void)enterBcakground {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
-}
-- (void)becomeForeground {
-    NSLog(@"%@",NSStringFromSelector(_cmd));
 }
 
 

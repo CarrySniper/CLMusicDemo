@@ -19,7 +19,7 @@
 
 @implementation MusicMenuView
 
-+ (instancetype)instance {
++ (instancetype)sharedInstance {
     return [[self alloc] init];
 }
 - (instancetype)init
@@ -69,7 +69,7 @@ static bool _isShow = NO;
     }
     
     CLMusicModel *model = _array[indexPath.row];
-    BOOL isPlaying = [[CLMusicPlayer instance].musicModel isEqual:model];
+    BOOL isPlaying = [[CLMusicPlayer sharedInstance].musicModel isEqual:model];
     [cell setModel:model index:indexPath.row+1 isPlaying:isPlaying];
     
     return cell;

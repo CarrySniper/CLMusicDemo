@@ -24,6 +24,7 @@
 		99BDFA8A1F5FF551004A956B /* MusicPlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 99BDFA881F5FF551004A956B /* MusicPlayerViewController.m */; };
 		99BDFA8B1F5FF551004A956B /* MusicPlayerViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 99BDFA891F5FF551004A956B /* MusicPlayerViewController.xib */; };
 		99BDFA8D1F61008B004A956B /* 国王与乞丐.lrc in Resources */ = {isa = PBXBuildFile; fileRef = 99BDFA8C1F61008B004A956B /* 国王与乞丐.lrc */; };
+		FAEA59DC209182940071FFB9 /* CLMusicPlayer+Handle.m in Sources */ = {isa = PBXBuildFile; fileRef = FAEA59DB209182940071FFB9 /* CLMusicPlayer+Handle.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,8 @@
 		99BDFA891F5FF551004A956B /* MusicPlayerViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MusicPlayerViewController.xib; sourceTree = "<group>"; };
 		99BDFA8C1F61008B004A956B /* 国王与乞丐.lrc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "国王与乞丐.lrc"; sourceTree = "<group>"; };
 		9BEEDD36916E29EE82349562 /* Pods-CLMusicDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-CLMusicDemo.release.xcconfig"; path = "Pods/Target Support Files/Pods-CLMusicDemo/Pods-CLMusicDemo.release.xcconfig"; sourceTree = "<group>"; };
+		FAEA59DA209182940071FFB9 /* CLMusicPlayer+Handle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CLMusicPlayer+Handle.h"; sourceTree = "<group>"; };
+		FAEA59DB209182940071FFB9 /* CLMusicPlayer+Handle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CLMusicPlayer+Handle.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,7 +113,7 @@
 		99BDFA3A1F5F8FB3004A956B /* CLMusicDemo */ = {
 			isa = PBXGroup;
 			children = (
-				99BDFA7E1F5FF43F004A956B /* MusicPlayer */,
+				99BDFA7E1F5FF43F004A956B /* MusicPlayerView */,
 				99BDFA3E1F5F8FB3004A956B /* AppDelegate.h */,
 				99BDFA3F1F5F8FB3004A956B /* AppDelegate.m */,
 				99BDFA441F5F8FB3004A956B /* Main.storyboard */,
@@ -139,11 +142,13 @@
 				99BDFA781F5FF3F8004A956B /* CLMusicModel.m */,
 				99BDFA791F5FF3F8004A956B /* CLMusicPlayer.h */,
 				99BDFA7A1F5FF3F8004A956B /* CLMusicPlayer.m */,
+				FAEA59DA209182940071FFB9 /* CLMusicPlayer+Handle.h */,
+				FAEA59DB209182940071FFB9 /* CLMusicPlayer+Handle.m */,
 			);
 			path = CLMusicPlayer;
 			sourceTree = "<group>";
 		};
-		99BDFA7E1F5FF43F004A956B /* MusicPlayer */ = {
+		99BDFA7E1F5FF43F004A956B /* MusicPlayerView */ = {
 			isa = PBXGroup;
 			children = (
 				99BDFA7F1F5FF43F004A956B /* TableViewCell.h */,
@@ -158,7 +163,7 @@
 				990CF82F1F7217A600804547 /* MusicMenuView.m */,
 				990CF8301F7217A600804547 /* MusicMenuView.xib */,
 			);
-			path = MusicPlayer;
+			path = MusicPlayerView;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -172,7 +177,6 @@
 				99BDFA341F5F8FB3004A956B /* Sources */,
 				99BDFA351F5F8FB3004A956B /* Frameworks */,
 				99BDFA361F5F8FB3004A956B /* Resources */,
-				2EC67FF3796C9E98A5AB1ABE /* [CP] Embed Pods Frameworks */,
 				8A2A9393709B88CDFC42D9AB /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
@@ -195,7 +199,7 @@
 				TargetAttributes = {
 					99BDFA371F5F8FB3004A956B = {
 						CreatedOnToolsVersion = 8.3.3;
-						DevelopmentTeam = P7X66L38K4;
+						DevelopmentTeam = Q6CDH23BU3;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -241,21 +245,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		2EC67FF3796C9E98A5AB1ABE /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-CLMusicDemo/Pods-CLMusicDemo-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		8A2A9393709B88CDFC42D9AB /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -267,7 +256,7 @@
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}",
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/SVProgressHUD.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -300,6 +289,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				99BDFA861F5FF43F004A956B /* ViewController.m in Sources */,
+				FAEA59DC209182940071FFB9 /* CLMusicPlayer+Handle.m in Sources */,
 				99BDFA401F5F8FB3004A956B /* AppDelegate.m in Sources */,
 				99BDFA841F5FF43F004A956B /* TableViewCell.m in Sources */,
 				99BDFA8A1F5FF551004A956B /* MusicPlayerViewController.m in Sources */,
@@ -440,7 +430,7 @@
 			baseConfigurationReference = 526276AC29CEC503EE33A786 /* Pods-CLMusicDemo.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = P7X66L38K4;
+				DEVELOPMENT_TEAM = Q6CDH23BU3;
 				INFOPLIST_FILE = CLMusicDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -454,7 +444,7 @@
 			baseConfigurationReference = 9BEEDD36916E29EE82349562 /* Pods-CLMusicDemo.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = P7X66L38K4;
+				DEVELOPMENT_TEAM = Q6CDH23BU3;
 				INFOPLIST_FILE = CLMusicDemo/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

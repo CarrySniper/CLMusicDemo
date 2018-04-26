@@ -13,16 +13,17 @@
  */
 
 #import <UIKit/UIKit.h>
-#import "CLMusicPlayer.h"
+#import "CLMusicPlayer+Handle.h"
 
-typedef NS_ENUM(NSUInteger, MusicPlayMode) {
-    MusicPlayMode_Nomal = 0,        //顺序播放（列表顺序，播放完毕停止）
-    MusicPlayMode_SingalReplay,     //单曲循环
-    MusicPlayMode_ListReplay,       //列表循环
-    MusicPlayMode_RandomPlay,       //随机播放
+
+typedef NS_ENUM(NSUInteger, CLMusicPlayMode) {
+    CLMusicPlayMode_Nomal = 0,        //顺序播放（列表顺序，播放完毕停止）
+    CLMusicPlayMode_SingleReplay,     //单曲循环
+    CLMusicPlayMode_ListReplay,       //列表循环
+    CLMusicPlayMode_RandomPlay,       //随机播放
 };
 
-@interface MusicPlayerViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, CLMusicPlayerProtocol>
+@interface MusicPlayerViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, CLMusicPlayerDelegate>
 
 
 @property (strong, nonatomic) IBOutlet UITableView *tableView;
@@ -45,7 +46,7 @@ typedef NS_ENUM(NSUInteger, MusicPlayMode) {
 @property (nonatomic, strong, readwrite) NSArray *defaultMusics;// 全部音乐
 @property (nonatomic, strong, readwrite) NSArray *currentMusics;// 当前播放列表（顺序修改过的）
 
-@property (nonatomic, assign) MusicPlayMode musicPlayMode;
+@property (nonatomic, assign) CLMusicPlayMode musicPlayMode;
 @property (nonatomic, strong) CLMusicPlayer *musicPlayer;
 
 - (instancetype)initWithMusicModel:(CLMusicModel *)currentMusicModel

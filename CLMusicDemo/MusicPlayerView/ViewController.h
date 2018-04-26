@@ -11,7 +11,7 @@
 
 @class MusicPlayerViewController;
 
-@interface ViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, CLMusicPlayerProtocol> {
+@interface ViewController : UIViewController<UITableViewDelegate, UITableViewDataSource, CLMusicPlayerDelegate> {
     NSMutableArray *_musicsArray;
     MusicPlayerViewController *_musicPlayerViewController;
 }

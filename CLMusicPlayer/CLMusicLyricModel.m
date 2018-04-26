@@ -64,48 +64,55 @@
 
 + (NSArray *)lyrics:(NSString *)lyric
 {
-    NSMutableArray *array = [NSMutableArray array];
-    // 歌词数组
+    NSMutableArray *lyricModels = [NSMutableArray array];
+    // 歌词数组 以换行符划分
     lyric = [lyric stringByReplacingOccurrencesOfString:@"\r" withString:@""];
     NSMutableArray *lyrics = [[lyric componentsSeparatedByString:@"\n"] mutableCopy];
     [lyrics removeObject:@""];
-    // 遍历
+    // 遍历 每一行歌词
     for (NSString *lineLrc in lyrics) {
-        NSRange startRange = [lineLrc rangeOfString:@"["];
-        NSRange stopRange = [lineLrc rangeOfString:@"]"];
-        // 截取[]内容
-        NSString *timeString = [lineLrc substringWithRange:NSMakeRange(startRange.location + 1, stopRange.location - startRange.location - 1)];
-        
-        // 正则
-        NSString *timeRegex = @"[0-9]{2}\\:[0-9]{2}\\.[0-9]{2}";
-        NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", timeRegex];
-        
-        // 匹配数据并保存到数组
-        CLMusicLyricModel *model = [CLMusicLyricModel new];
-        if ([predicate evaluateWithObject:timeString]) {
-            // 存在时间格式的 [00:00.00]
-            NSString *minString = [timeString substringWithRange:NSMakeRange(0, 2)];
-            NSString *secString = [timeString substringWithRange:NSMakeRange(3, 2)];
-            NSString *mseString = [timeString substringWithRange:NSMakeRange(6, 2)];
+        // 行歌词数组 以特殊符号划分，用于多时间用同一句歌词。如：[00:01:22][00:01:58][00:03:11]我是歌词
+        NSArray *lineArray = [lineLrc componentsSeparatedByString:@"]"];
+        for (int i = 0; i < lineArray.count - 1; i++) {
+            NSString *timeString = lineArray[i];
+            timeString = [timeString stringByReplacingOccurrencesOfString:@"[" withString:@""];
+            timeString = [timeString stringByReplacingOccurrencesOfString:@"]" withString:@""];
+            // 正则
+            NSString *timeRegex = @"[0-9]{2}\\:[0-9]{2}\\.[0-9]{2}";
+            NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", timeRegex];
             
-            float timeLength = [minString floatValue] * 60 + [secString floatValue] + [mseString floatValue] / 1000;
-            NSString *lyricString = [lineLrc substringFromIndex:10];
+            // 匹配数据并保存到数组
+            CLMusicLyricModel *model = [CLMusicLyricModel new];
+            if ([predicate evaluateWithObject:timeString]) {
+                // 存在时间格式的 [00:00.00]
+                NSString *minString = [timeString substringWithRange:NSMakeRange(0, 2)];
+                NSString *secString = [timeString substringWithRange:NSMakeRange(3, 2)];
+                NSString *mseString = [timeString substringWithRange:NSMakeRange(6, 2)];
+                float timeLength = [minString floatValue] * 60 + [secString floatValue] + [mseString floatValue] / 1000;
+                
+                model.beginTime = timeLength;
+                model.content = lineArray.lastObject;
+            }else{
+                // 其他格式的 ti: ar: al: by: 等
+                NSRange startRange = [lineLrc rangeOfString:@":"];
+                NSString *lyricString = [timeString substringFromIndex:startRange.location];
+                
+                model.beginTime = 0.0;
+                model.content = lyricString;
+            }
             
-            model.beginTime = timeLength;
-            model.content = lyricString;
-        }else{
-            // 其他格式的 ti: ar: al: by: 等
-            NSRange startRange = [lineLrc rangeOfString:@":"];
-            NSString *lyricString = [timeString substringFromIndex:startRange.location];
-            
-            model.beginTime = 0.0;
-            model.content = lyricString;
+            [lyricModels addObject:model];
         }
-        
-        [array addObject:model];
     }
+    NSArray *sortArray = [lyricModels sortedArrayUsingComparator:^NSComparisonResult(CLMusicLyricModel *obj1, CLMusicLyricModel *obj2) {
+        if (obj1.beginTime > obj2.beginTime) {
+            return NSOrderedDescending;
+        }else{
+            return NSOrderedAscending;
+        }
+    }];
     
-    return array;
+    return sortArray;
 }
 
 @end

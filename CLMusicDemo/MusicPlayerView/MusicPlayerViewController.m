@@ -9,16 +9,9 @@
 #import "MusicPlayerViewController.h"
 #import "MusicMenuView.h"
 
-// 只要添加了这个宏，就不用带mas_前缀
-#define MAS_SHORTHAND
-// 只要添加了这个宏，equalTo就等价于mas_equalTo
-#define MAS_SHORTHAND_GLOBALS
-// 这个头文件一定要放在上面两个宏的后面
 #import <Masonry.h>
-
 #import <AFNetworking.h>
 #import <SVProgressHUD.h>
-
 
 @interface MusicPlayerViewController ()
 
@@ -33,15 +26,15 @@
         
         _defaultMusics = defaultMusics;
         
-        self.musicPlayer = [CLMusicPlayer instance];
-        [self.musicPlayer setProtocol:self];
+        self.musicPlayer = [CLMusicPlayer sharedInstance];
+        self.musicPlayer.delegate = self;
                 
         // 远程控制类
-        [self.musicPlayer cl_addRemoteCommandCenterWithTarget:self
-                                                   playAction:@selector(playOrPauseAction:)
-                                                  pauseAction:@selector(playOrPauseAction:)
-                                               lastSongAction:@selector(lastAction:)
-                                               nextSongAction:@selector(nextAction:)];
+        [self.musicPlayer addRemoteCommandCenterWithTarget:self
+                                                playAction:@selector(playOrPauseAction:)
+                                               pauseAction:@selector(playOrPauseAction:)
+                                            lastSongAction:@selector(lastAction:)
+                                            nextSongAction:@selector(nextAction:)];
         
         // FIXME: 当前播放模式，需要自己关联用户信息，持久化保持会好一点
         [self switchMusicPlayMode:0];
@@ -70,7 +63,7 @@
     [super viewWillAppear:animated];
     
     // 设置状态
-    [self musicPlayerStatusChange:self.musicPlayer.status];
+    [self cl_musicPlayerStatusChange:self.musicPlayer.status];
 }
 
 // FIXME: 这里是根据音乐id来获取音乐链接的，要根据实际需求替换这个方法
@@ -98,7 +91,7 @@
         NSDictionary *dict = [responseObject mutableCopy];
         NSDictionary *songurl = dict[@"bitrate"];
         musicModel.songLink = songurl[@"show_link"];
-        [self.musicPlayer cl_playMusic:musicModel];
+        [self.musicPlayer playMusic:musicModel];
         
     } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
         [SVProgressHUD dismiss];
@@ -112,18 +105,19 @@
 #pragma mark - UIControl
 #pragma mark 播放暂停
 - (IBAction)playOrPauseAction:(id)sender {
-    [self.musicPlayer cl_musicPlayOrPause];
+    [self.musicPlayer musicPlayOrPause];
 }
 
 #pragma mark 上一首
 - (IBAction)lastAction:(id)sender {
     NSUInteger currentIndex = [_currentMusics indexOfObject:_musicPlayer.musicModel];
     if (currentIndex <= 0) {
-        if (self.musicPlayMode == MusicPlayMode_ListReplay) {
+        if (self.musicPlayMode == CLMusicPlayMode_ListReplay) {
             CLMusicModel *model = _currentMusics.lastObject;
             [self playingMusic:model];
         }else{
-            NSLog(@"没有上一首啦");
+            [SVProgressHUD showInfoWithStatus:@"没有上一首啦"];
+            [SVProgressHUD dismissWithDelay:1.0];
         }
     }else{
         CLMusicModel *model = _currentMusics[currentIndex - 1];
@@ -135,11 +129,12 @@
 - (IBAction)nextAction:(id)sender {
     NSUInteger currentIndex = [_currentMusics indexOfObject:_musicPlayer.musicModel];
     if (currentIndex >= _currentMusics.count - 1) {
-        if (self.musicPlayMode == MusicPlayMode_ListReplay) {
+        if (self.musicPlayMode == CLMusicPlayMode_ListReplay) {
             CLMusicModel *model = _currentMusics.firstObject;
             [self playingMusic:model];
         }else{
-            NSLog(@"没有下一首啦");
+            [SVProgressHUD showInfoWithStatus:@"没有下一首啦"];
+            [SVProgressHUD dismissWithDelay:1.0];
         }
     }else{
         CLMusicModel *model = _currentMusics[currentIndex + 1];
@@ -156,24 +151,24 @@
     }
     [self switchMusicPlayMode:self.musicPlayMode];
 }
-- (void)switchMusicPlayMode:(MusicPlayMode)musicPlayMode {
+- (void)switchMusicPlayMode:(CLMusicPlayMode)musicPlayMode {
     switch (musicPlayMode) {
-        case MusicPlayMode_Nomal: {
+        case CLMusicPlayMode_Nomal: {
             [_modeButton setTitle:@"顺序" forState:UIControlStateNormal];
             _currentMusics = [_defaultMusics mutableCopy];
         }
             break;
-        case MusicPlayMode_SingalReplay: {
+        case CLMusicPlayMode_SingleReplay: {
             [_modeButton setTitle:@"单曲" forState:UIControlStateNormal];
             _currentMusics = [_defaultMusics mutableCopy];
         }
             break;
-        case MusicPlayMode_ListReplay: {
+        case CLMusicPlayMode_ListReplay: {
             [_modeButton setTitle:@"循环" forState:UIControlStateNormal];
             _currentMusics = [_defaultMusics mutableCopy];
         }
             break;
-        case MusicPlayMode_RandomPlay: {
+        case CLMusicPlayMode_RandomPlay: {
             [_modeButton setTitle:@"随机" forState:UIControlStateNormal];
             _currentMusics = [self.musicPlayer cl_randomArray:_defaultMusics];
         }
@@ -185,13 +180,12 @@
 
 #pragma mark 播放列表（顺序修改后的）
 - (IBAction)listAction:(id)sender {
-    
-    [[MusicMenuView instance] showWithData:self.currentMusics];
+    [[MusicMenuView sharedInstance] showWithData:self.currentMusics];
 }
 
 #pragma mark UISlider 拖动修改播放进度
 - (IBAction)beginProgressAction:(id)sender {
-    [self.musicPlayer cl_seekToTimeBegin];
+    [self.musicPlayer seekToTimeBegin];
 }
 - (IBAction)didChangeProgressAction:(id)sender {
     UISlider *slider = (UISlider *)sender;
@@ -200,7 +194,7 @@
 - (IBAction)endProgressAction:(id)sender {
     UISlider *slider = (UISlider *)sender;
     if (self.musicPlayer.durationTime > 0) {
-        [self.musicPlayer cl_seekToTimeEndWithProgress:slider.value completionHandler:^{
+        [self.musicPlayer seekToTimeEndWithProgress:slider.value completionHandler:^{
             // 设为播放中 可暂停状态
         }];
     }else{
@@ -210,12 +204,12 @@
 
 #pragma mark - CLMusicPlayer Protocol
 #pragma mark 音乐切换回调（切歌）
-- (void)musicPlayerReplaceMusic:(CLMusicModel *)musicModel {
+- (void)cl_musicPlayerReplaceMusic:(CLMusicModel *)musicModel {
     self.title = musicModel.songName;
 }
 
 #pragma mark 音乐播放状态
-- (void)musicPlayerStatusChange:(CLMusicStatus)musicStatus {
+- (void)cl_musicPlayerStatusChange:(CLMusicStatus)musicStatus {
     if (musicStatus == CLMusicStatusPlaying || musicStatus == CLMusicStatusReadyToPlay) {
         [self.playerButton setSelected:YES];
     }else{
@@ -224,30 +218,30 @@
 }
 
 #pragma mark 音乐缓存进度
-- (void)musicPlayerCacheProgress:(float)progress {
+- (void)cl_musicPlayerCacheProgress:(float)progress {
     self.progressView.progress = progress;
     self.totalTime.text = [self.musicPlayer cl_formatTime:[self.musicPlayer durationTime]];
 }
 
 #pragma mark 音乐播放进度
-- (void)musicPlayerPlayingProgress:(float)progress {
+- (void)cl_musicPlayerPlayingProgress:(float)progress {
     self.progressSlider.value = progress;
     self.currentTime.text = [self.musicPlayer cl_formatTime:[self.musicPlayer currentTime]];
     self.totalTime.text = [self.musicPlayer cl_formatTime:[self.musicPlayer durationTime]];
 }
 
 #pragma mark 音乐播放结束
-- (void)musicPlayerEndPlay {
-    if (_musicPlayMode == MusicPlayMode_SingalReplay) {
+- (void)cl_musicPlayerEndPlay {
+    if (_musicPlayMode == CLMusicPlayMode_SingleReplay) {
         // 单曲循环
-        [self.musicPlayer cl_seekToTimeEndWithProgress:0.0 completionHandler:nil];
+        [self.musicPlayer seekToTimeEndWithProgress:0.0 completionHandler:nil];
     }else{
         [self nextAction:nil];
     }
 }
 
 #pragma mark 音乐歌词当前下标
-- (void)musicPlayerLyricIndex:(NSInteger)lyricIndex {
+- (void)cl_musicPlayerLyricIndex:(NSInteger)lyricIndex {
     if ([_musicPlayer.musicModel.lyrics count] > 0 && isLyricScroll == NO) {
         NSIndexPath *indexPath = [NSIndexPath indexPathForRow:lyricIndex inSection:0];
         [self.tableView reloadData];
@@ -347,7 +341,7 @@ static bool isLyricScroll = NO;  // 标记是否手动滚动歌词
         _lyricLabel.textAlignment = NSTextAlignmentCenter;
         _lyricLabel.font = [UIFont systemFontOfSize:15];
         [self.contentView addSubview:_lyricLabel];
-        [_lyricLabel makeConstraints:^(MASConstraintMaker *make) {
+        [_lyricLabel mas_makeConstraints:^(MASConstraintMaker *make) {
             make.left.equalTo(self.contentView);
             make.right.equalTo(self.contentView);
             make.centerY.equalTo(self.contentView);

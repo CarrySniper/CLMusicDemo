@@ -17,7 +17,7 @@
 @property (strong, nonatomic) IBOutlet UITableView *tableView;
 @property (strong, nonatomic) IBOutlet UILabel *countLabel;
 
-+ (instancetype)instance;
++ (instancetype)sharedInstance;
 
 - (void)showWithData:(NSArray *)array;
 

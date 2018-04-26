@@ -31,7 +31,7 @@
     
     [self httpMusics];
     
-    self.musicPlayer = [CLMusicPlayer instance];
+    self.musicPlayer = [CLMusicPlayer sharedInstance];
     
 }
 
@@ -44,7 +44,7 @@
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
-    self.musicPlayer.protocol = self;
+    self.musicPlayer.delegate = self;
     // 设置状态
     [self musicPlayerStatusDidChange:self.musicPlayer.status];
 }
@@ -85,11 +85,11 @@
 
 #pragma mark - UIControl
 - (IBAction)playOrPauseAction:(id)sender {
-    [[CLMusicPlayer instance] cl_musicPlayOrPause];
+    [[CLMusicPlayer sharedInstance] musicPlayOrPause];
 }
 
 - (IBAction)showListsAction:(id)sender {
-    [[MusicMenuView instance] showWithData:_musicPlayerViewController.currentMusics];
+    [[MusicMenuView sharedInstance] showWithData:_musicPlayerViewController.currentMusics];
 }
 
 #pragma mark 跳转到当前播放音乐页
